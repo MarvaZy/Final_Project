@@ -9,6 +9,8 @@ Created on Sun Sep 20 12:34:47 2020
 Creating the database for the project
 '''
 
+# first we need to import our server in mySQL
+
 import mysql.connector as mysql
 
 db = mysql.connect(
@@ -19,7 +21,11 @@ db = mysql.connect(
 
 cursor = db.cursor()
 
-# cursor.execute("CREATE DATABASE final_project")     This line created the database
+
+# This line created the database
+cursor.execute("CREATE DATABASE final_project")     
+
+# Now we can acssess the database
 
 mydb = mysql.connect(
     host = "localhost",
@@ -30,5 +36,7 @@ mydb = mysql.connect(
 
 mycursor = mydb.cursor()
 
+
+# this creates our table
 mycursor.execute("CREATE TABLE Ingredients_Table (id INT AUTO_INCREMENT PRIMARY KEY, Category VARCHAR(255), URL VARCHAR(255), Ingredients VARCHAR(10000))")    #This line created a table - first column is id number, than category, than url and the last column is the ingredients
 

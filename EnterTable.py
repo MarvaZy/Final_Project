@@ -4,7 +4,7 @@ Created on Mon Sep 21 21:32:42 2020
 
 @author: MarvaZychlinski
 """
-
+import MarkivSodi
 import Tivoneat
 import mysql.connector as mysql
 
@@ -29,7 +29,6 @@ def enter_table(website):
     '''
     
     categories = website._get_categories()
-    categories = list(dict.fromkeys(categories))
     num_categories = len(categories)
     for i in range(num_categories):
         category_name = categories[i][0]
@@ -43,8 +42,10 @@ def enter_table(website):
             cursor.execute(sql, val)
 
             db.commit()
+    
     return
                
 
-enter_table(Tivoneat)   #--> this code entered all the information from TIVONEAT website to our database
-    
+# this code entered all the information from TIVONEAT and Markiv Sodi website to our database
+enter_table(Tivoneat)   
+enter_table(MarkivSodi)   
