@@ -56,17 +56,20 @@ class Tivoneat:
             
         return category_recipes
     
-    def _get_recipes(index):
+    def _get_recipes(self, index):
         
         '''
-        get_recipes gives all the links to the recipes for a specific category
+        get_recipes gives all the links to the recipes for a specific category next to the recipe's name
         the category is chosen by its row index from the get_categories function
         '''
         
         # loads the matrix with the urls of the categories
-        category_recipes = Tivoneat._get_categories()                           
+        category_recipes = self._get_categories()                           
         
-        recipes_link = []
+        # list of all the urls for the recipes in that category
+        recipes_links = []
+        # list of all the names for the recipes in that category
+        recipes_names = []
         
         # split the url so we can change sector
         url_load = category_recipes[index][1].split('&')                           
@@ -86,8 +89,14 @@ class Tivoneat:
             
             for a in soup.find_all('a', href=True): 
                 # adds the links in this sector of the category
-                recipes_link.append(a['href'])                                     
+                recipes_links.append(a['href'])                                     
         
+            # the name of the recipe
+            headers = soup.find_all('h2')
+            for h in headers:
+                recipes_names.append(h.get_text())
+            
+            # preparing for next page
             url_load = new_url.split('&')
             url_load[0] = url_load[0][:-1]
             
@@ -95,21 +104,26 @@ class Tivoneat:
             # checks if we got the last page of the category, based on a script in the webpage itself
             is_last = eval(str(soup.find('script').get_text().split()[2][:-1]).capitalize())  
                 
-        return recipes_link
+        # join the name of the recipe to its link
+        recipes = []
+        for i in range(len(recipes_links)):
+            recipes.append([recipes_names[i], recipes_links[i]])
+        
+        return recipes
     
-    def _get_ingredients(index):
+    def _get_ingredients(self, index):
         
         '''
-        get_ingredients will give a list of ingredientes of every recipe in a specific category, next to the recipe's url
+        get_ingredients will give a list of ingredientes of every recipe in a specific category, next to the recipe's name and url
         the category is chosen by its row index from the get_categories function
         '''
         
-        recipes_link = Tivoneat._get_recipes(index)
+        recipes = self._get_recipes(index)
         
         recipe_ingr = []
         
-        for i in range(len(recipes_link)):
-            page = requests.get(recipes_link[i])
+        for i in range(len(recipes)):
+            page = requests.get(recipes[i][1])
             soup = BeautifulSoup(page.content, 'html.parser') 
         
             # the class that contains the ingredients
@@ -125,9 +139,11 @@ class Tivoneat:
                                                                 or x 
                                                                 in exclude_words)] 
             str_ingerdients = ' '.join(final_ingredients)
-            values = [recipes_link[i], str_ingerdients]
+            values = [recipes[i][0], recipes[i][1], str_ingerdients]
             
             recipe_ingr.append(values)
         
         return recipe_ingr
 
+test = Tivoneat()
+print(test._get_ingredients(0)[0])    

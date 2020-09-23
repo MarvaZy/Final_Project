@@ -58,14 +58,17 @@ class MarkivSodi:
     def _get_recipes(self, index):
         
         '''
-        get_recipes gives all the links to the recipes for a specific category
+        get_recipes gives all the links to the recipes for a specific category next to the recipe's name
         the category is chosen by its row index from the get_categories function
         '''
         
         # loads the matrix with the urls of the categories
-        category_recipes = MarkivSodi._get_categories(self.url)                              
+        category_recipes = self._get_categories()                              
         
-        recipes_link = []
+        # list of all the urls for the recipes in that category
+        recipes_links = []
+        # list of all the names for the recipes in that category
+        recipes_names = []
         
         page = se.get(category_recipes[index][1])
         soup = BeautifulSoup(page.content, 'html.parser') 
@@ -93,25 +96,36 @@ class MarkivSodi:
     
             for a in main_page.find_all('a', href=True):
                 if self.url in a['href'] and "comments" not in a['href'] and "respond" not in a['href']:
-                    recipes_link.append(a['href'].strip())
-    
-        recipes_link = list(dict.fromkeys(recipes_link))
+                    recipes_links.append(a['href'].strip())
+            
+           # deletes duplicaates of links
+            recipes_links = list(dict.fromkeys(recipes_links))
+           
+            # the name of the recipe
+            headers = main_page.find_all('h3')
+            for h in headers:
+                recipes_names.append(h.get_text())
+           
+        # join the name of the recipe to its link
+        recipes = []
+        for i in range(len(recipes_links)):
+            recipes.append([recipes_names[i], recipes_links[i]])
         
-        return recipes_link
+        return recipes
         
-    def _get_ingredients(index):
+    def _get_ingredients(self, index):
         
         '''
-        get_ingredients will give a list of ingredientes of every recipe in a specific category, next to the recipe's url
+        get_ingredients will give a list of ingredientes of every recipe in a specific category, next to the recipe's name and url
         the category is chosen by its row index from the get_categories function
         '''
         
-        recipes_link = MarkivSodi._get_recipes(index)
+        recipes = self._get_recipes(index)
         
         recipe_ingr = []
         
-        for i in range(len(recipes_link)):
-            page = se.get(recipes_link[i])
+        for i in range(len(recipes)):
+            page = se.get(recipes[i][1])
             soup = BeautifulSoup(page.content, 'html.parser') 
         
             # the class that contains the ingredients
@@ -126,14 +140,15 @@ class MarkivSodi:
                                                                 or x 
                                                                 in exclude_words)] 
             str_ingerdients = ' '.join(final_ingredients)
-            values = [recipes_link[i], str_ingerdients]
+            values = [recipes[i][0], recipes[i][1], str_ingerdients]
             
             recipe_ingr.append(values)
         
         return recipe_ingr
 
 
-
+test = MarkivSodi()
+print(test._get_ingredients(4))
 
 
     

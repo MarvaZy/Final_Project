@@ -18,13 +18,10 @@ db = mysql.connect(
 cursor = db.cursor()
 
 
-
-
 def enter_table(website):
     
     '''
     enter_table - enters all the information gathered from TIVONEAT website into the table
-
     value "website" - the name of the class representing each website
     '''
     
@@ -32,13 +29,14 @@ def enter_table(website):
     num_categories = len(categories)
     for i in range(num_categories):
         category_name = categories[i][0]
-        ingedients_matrix = website._get_ingredients(i)
-        for j in range(len(ingedients_matrix)):
-            url_adr = ingedients_matrix[j][0]
-            ingr_list = ingedients_matrix[j][1]
+        ingredients_matrix = website._get_ingredients(i)
+        for j in range(len(ingredients_matrix)):
+            rec_name = ingredients_matrix[j][0]
+            url_adr = ingredients_matrix[j][1]
+            ingr_list = ingredients_matrix[j][2]
             
-            sql = "INSERT INTO Ingredients_Table (Category, URL, Ingredients) VALUES (%s, %s, %s)"
-            val = (str(category_name), str(url_adr), str(ingr_list))
+            sql = "INSERT INTO Ingredients_Table (Category, Name, URL, Ingredients) VALUES (%s, %s, %s, %s)"
+            val = (str(category_name), str(rec_name), str(url_adr), str(ingr_list))
             cursor.execute(sql, val)
 
             db.commit()

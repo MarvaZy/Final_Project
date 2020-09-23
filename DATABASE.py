@@ -37,6 +37,5 @@ mydb = mysql.connect(
 mycursor = mydb.cursor()
 
 
-# this creates our table
-mycursor.execute("CREATE TABLE Ingredients_Table (id INT AUTO_INCREMENT PRIMARY KEY, Category VARCHAR(255), URL VARCHAR(255), Ingredients VARCHAR(10000))")    #This line created a table - first column is id number, than category, than url and the last column is the ingredients
-
+# This line created a table - first column is id number, than category, than name of the recipe and next is the url and the last column is the ingredients
+mycursor.execute("CREATE TABLE Ingredients_Table (id INT AUTO_INCREMENT PRIMARY KEY, Category VARCHAR(255), Name VARCHAR(255), URL VARCHAR(255), Ingredients VARCHAR(10000))")    
