@@ -26,41 +26,41 @@ class Search:
     def _category_from_index(self, index):
         
         """
-        category_from_index translate the number that the user will choose as its category, to the related categories in our table
+        category_from_index translate the number that the user will choose as its category, to the related table
         """
         
         if index == 1:
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%בוקר%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Breakfast"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 2:
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%עיקריות%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM MainCourse"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 3:
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%קינוחים%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Dessert"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 4: 
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%סלטים%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Salad"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 5: 
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%נשנושים%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Snack"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 6:
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%שייקים%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Shake"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
         elif index == 7:
-            sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%גבינות%'"""
+            sql_select_query = """SELECT Name, URL, Ingredients FROM Spread"""
             cursor.execute(sql_select_query)
             records = cursor.fetchall()
             
@@ -76,7 +76,7 @@ class Search:
         gluten function gives all the records related to no-gluten recipies 
         '''
         
-        sql_select_query = """SELECT URL, Ingredients FROM Ingredients_Table WHERE Category LIKE '%גלוטן%'"""
+        sql_select_query = """SELECT Name, URL, Ingredients FROM Gluten"""
         cursor.execute(sql_select_query)
         no_gluten = cursor.fetchall()
     
@@ -91,7 +91,7 @@ class Search:
         
         no_gluten = Search._gluten()
         
-        url_list = []
+        recipes_list = []
         usr_input = int(input("מהו סוג המתכון המבוקש? (הקש את המספר)\n1. ארוחות בוקר\n2. עיקריות \n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
         while usr_input not in range(1,8):
             usr_input = int(input("בחירה לא חוקית; אנא בחר שנית:\n1. ארוחות בוקר\n2. עיקריות\n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
@@ -101,23 +101,22 @@ class Search:
         restrictions = input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n")
         restrictions_list = restrictions.split()
         
-        for url, ingr in records:
-            if not all(x in ingr for x in restrictions_list):
-                url_list.append(url)
-        
+        # all of the urls in the choosen category - for gluten option check
         urls = []
-        for url, ingr in records:
-            urls.append(url)
         
+        for name, url, ingr in records:
+            urls.append(url)
+            if not all(x in ingr for x in restrictions_list):
+                recipes_list.append([name, url])
+
         # if gluten is entered as restriction, algorithm will add the relevant recipes from the gluten cloumn in our table
         if 'גלוטן' in restrictions_list:    
             restrictions_list.remove('גלוטן')
-            for url, ingr in no_gluten:
+            for name, url, ingr in no_gluten:
                 if url in urls:
                     if not all(x in ingr for x in restrictions_list):
-                        url_list.append(url) 
-        return url_list   
+                        recipes_list.append([name,url]) 
+        return recipes_list   
 
 
 print(Search.search())
-

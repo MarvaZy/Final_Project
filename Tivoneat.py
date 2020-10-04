@@ -22,19 +22,19 @@ class Tivoneat:
         self.url = "https://tivoneat.co.il/"                                   
  
     def _get_categories(self): 
-    
+        
         '''
-        get_categories gives a matrix, containing the name of each category and its link (in that order)
+        get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
         '''
         
         # begining of url for loading next page
-        _Start = "https://tivoneat.co.il/wp-content/themes/tivoneat/recLoad.php?paged=1&postsPerPage=6&category="  
+        _start = "https://tivoneat.co.il/wp-content/themes/tivoneat/recLoad.php?paged=1&postsPerPage=6&category="  
         
         # getting the webpage
         page = requests.get(self.url)
         soup = BeautifulSoup(page.content, 'html.parser')                          
         
-        category_recipes = []
+        category_recipes = {}
         
         # getting the part with the recipes links
         sub_menu = soup.find(class_="sub-menu")                                    
@@ -51,19 +51,19 @@ class Tivoneat:
             number_of_category = str(''.join(filter(str.isdigit, body_id)))
             
             # changing the url so we can load the whole recipes
-            new_url = _Start+number_of_category+"&lm=false"
-            category_recipes.append([[a.get_text()], new_url])
+            new_url = _start+number_of_category+"&lm=false"
+            category_recipes[a.get_text()] = str(new_url)
             
         return category_recipes
     
-    def _get_recipes(self, index):
+    def _get_recipes(self, category):
         
         '''
-        get_recipes gives all the links to the recipes for a specific category next to the recipe's name
-        the category is chosen by its row index from the get_categories function
+        get_recipes gives a nested dictionary connecting the recipes names to their urls for a specific category
+        the category is chosen by key values from the get_categories function
         '''
         
-        # loads the matrix with the urls of the categories
+        # loads the dictionary with the urls of the categories
         category_recipes = self._get_categories()                           
         
         # list of all the urls for the recipes in that category
@@ -72,7 +72,7 @@ class Tivoneat:
         recipes_names = []
         
         # split the url so we can change sector
-        url_load = category_recipes[index][1].split('&')                           
+        url_load = category_recipes[category].split('&')                           
         url_load[0] = url_load[0][:-1]
         
         j = 1
@@ -105,30 +105,25 @@ class Tivoneat:
             is_last = eval(str(soup.find('script').get_text().split()[2][:-1]).capitalize())  
                 
         # join the name of the recipe to its link
-        recipes = []
+        recipes = {}
         for i in range(len(recipes_links)):
-            recipes.append([recipes_names[i], recipes_links[i]])
+            recipes[recipes_names[i]] = {"url": recipes_links[i]}
         
         return recipes
     
-    def _get_ingredients(self, index):
+    def get_ingredients(self, category):
         
         '''
-        get_ingredients will give a list of ingredientes of every recipe in a specific category, next to the recipe's name and url
-        the category is chosen by its row index from the get_categories function
+        get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
+        the category is chosen by key values from the get_categories function
         '''
         
-        recipes = self._get_recipes(index)
-        
-        recipe_ingr = []
-        
-        for i in range(len(recipes)):
-            page = requests.get(recipes[i][1])
+        recipes_ingr = self._get_recipes(category)
+        for recipe in recipes_ingr:
+            page = requests.get(recipes_ingr[recipe]["url"])
             soup = BeautifulSoup(page.content, 'html.parser') 
-        
             # the class that contains the ingredients
             relevent_part = soup.find(class_="recipeIng") 
-        
             # getting only the text into a list
             ingredients = relevent_part.get_text().split() 
             # irrelevant words that can be excluded
@@ -138,12 +133,10 @@ class Tivoneat:
                                                                 or x=='/' 
                                                                 or x 
                                                                 in exclude_words)] 
-            str_ingerdients = ' '.join(final_ingredients)
-            values = [recipes[i][0], recipes[i][1], str_ingerdients]
-            
-            recipe_ingr.append(values)
+            str_ingredients = ' '.join(final_ingredients)
+            recipes_ingr[recipe]["ingredients"] = str_ingredients
         
-        return recipe_ingr
+        return recipes_ingr
 
 test = Tivoneat()
-print(test._get_ingredients(0)[0])    
+print(test._get_categories())    
