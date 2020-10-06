@@ -10,7 +10,6 @@ Creating the database for the project
 '''
 
 # first we need to import our server in mySQL
-
 import mysql.connector as mysql
 
 db = mysql.connect(
@@ -26,7 +25,6 @@ cursor = db.cursor()
 cursor.execute("CREATE DATABASE final_project")     
 
 # Now we can acssess the database
-
 mydb = mysql.connect(
     host = "localhost",
     user = "root",
@@ -58,7 +56,7 @@ def enter_categories(website):
     enter_categories - 
     value "website" - the name of the class representing each website
     '''
-    category_dictionay = {
+    category_dictionary = {
 "ארוחות בוקר": "Breakfast",                       
 "עיקריות": "MainCourse",                       
 "קינוחים ומתוקים": "Dessert",                       
@@ -69,23 +67,23 @@ def enter_categories(website):
 "נטול גלוטן": "Gluten",                       
                      }
     sql_statement = ["INSERT INTO ","category"," (Name, URL, Ingredients) VALUES (%s, %s, %s)"]
-    for category in category_dictionay:
-        sql_statement[1] = category_dictionay[category]
-        sql = ''.join(sql_statement)
-        ingerdients_dic = website.get_ingredients(category)
-        for recipe in ingerdients_dic:
-            url_adr = ingerdients_dic[recipe]["url"]
-            ingr_list = ingerdients_dic[recipe]["ingredients"]
-            val = (str(category), str(recipe), str(url_adr), str(ingr_list))
-            mycursor.execute(sql, val)
-            mydb.commit()
-
-    return
-               
+    for category in category_dictionary:
+        try:
+            sql_statement[1] = category_dictionary[category]
+            sql = ''.join(sql_statement)
+            ingerdients_dic = website.get_ingredients(category)
+            for recipe in ingerdients_dic:
+                url_adr = ingerdients_dic[recipe]["url"]
+                ingr_list = ingerdients_dic[recipe]["ingredients"]
+                val = (str(recipe), str(url_adr), str(ingr_list))
+                mycursor.execute(sql, val)
+                mydb.commit()
+        except:
+            pass
+    return 
 
 # this code entered all the information from TIVONEAT and Markiv Sodi website to our database
+Tivoneat = Tivoneat.Tivoneat()
+MarkivSodi = MarkivSodi.MarkivSodi()
 enter_categories(Tivoneat)   
 enter_categories(MarkivSodi)     
-
-
-

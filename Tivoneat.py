@@ -73,15 +73,14 @@ class Tivoneat:
         
         # split the url so we can change sector
         url_load = category_recipes[category].split('&')                           
-        url_load[0] = url_load[0][:-1]
         
         j = 1
         
-        is_last = False
+        is_last = "False"
         
-        while not is_last:
+        while is_last == "False":
             # next sector
-            url_load[0] = url_load[0]+str(j)                                       
+            url_load[0] = ''.join(url_load[0].split('=')[0]) + "=" + str(j)                                       
             new_url = '&'.join(url_load)
             
             page = requests.get(new_url)
@@ -98,11 +97,10 @@ class Tivoneat:
             
             # preparing for next page
             url_load = new_url.split('&')
-            url_load[0] = url_load[0][:-1]
             
             j += 1
             # checks if we got the last page of the category, based on a script in the webpage itself
-            is_last = eval(str(soup.find('script').get_text().split()[2][:-1]).capitalize())  
+            is_last = str(soup.find('script').get_text().split()[2][:-1]).capitalize()  
                 
         # join the name of the recipe to its link
         recipes = {}
@@ -137,6 +135,3 @@ class Tivoneat:
             recipes_ingr[recipe]["ingredients"] = str_ingredients
         
         return recipes_ingr
-
-test = Tivoneat()
-print(test._get_categories())    

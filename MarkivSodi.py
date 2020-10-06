@@ -151,7 +151,3 @@ class MarkivSodi:
             recipes_ingr[recipe]["ingredients"] = str_ingredients
     
         return recipes_ingr
-
-
-test = MarkivSodi()
-test.get_ingredients("נטול גלוטן")

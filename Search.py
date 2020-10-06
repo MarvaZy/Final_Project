@@ -89,13 +89,12 @@ class Search:
         than he will input the restrictions
         '''
         
-        no_gluten = Search._gluten()
-        
-        recipes_list = []
+        no_gluten = self._gluten()   
+        recipes = {}
         usr_input = int(input("מהו סוג המתכון המבוקש? (הקש את המספר)\n1. ארוחות בוקר\n2. עיקריות \n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
         while usr_input not in range(1,8):
             usr_input = int(input("בחירה לא חוקית; אנא בחר שנית:\n1. ארוחות בוקר\n2. עיקריות\n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
-        records = Search._category_from_index(usr_input)
+        records = self._category_from_index(usr_input)
         
         
         restrictions = input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n")
@@ -106,17 +105,18 @@ class Search:
         
         for name, url, ingr in records:
             urls.append(url)
-            if not all(x in ingr for x in restrictions_list):
-                recipes_list.append([name, url])
+            if not any(x in ingr for x in restrictions_list):
+                recipes[name] = url
 
         # if gluten is entered as restriction, algorithm will add the relevant recipes from the gluten cloumn in our table
         if 'גלוטן' in restrictions_list:    
             restrictions_list.remove('גלוטן')
             for name, url, ingr in no_gluten:
                 if url in urls:
-                    if not all(x in ingr for x in restrictions_list):
-                        recipes_list.append([name,url]) 
-        return recipes_list   
+                    if not any(x in ingr for x in restrictions_list):
+                        recipes[name] = url
+        
+        return recipes   
 
-
-print(Search.search())
+search = Search()
+print(search.search())
