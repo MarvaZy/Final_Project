@@ -47,9 +47,9 @@ mycursor.execute("CREATE TABLE Shake (id INT AUTO_INCREMENT PRIMARY KEY, Name VA
 mycursor.execute("CREATE TABLE Spread (id INT AUTO_INCREMENT PRIMARY KEY, Name VARCHAR(255), URL VARCHAR(255), Ingredients VARCHAR(10000))")
 mycursor.execute("CREATE TABLE Gluten (id INT AUTO_INCREMENT PRIMARY KEY, Name VARCHAR(255), URL VARCHAR(255), Ingredients VARCHAR(10000))")
 
-
 import MarkivSodi
 import Tivoneat
+import TheVeganati
 
 def enter_categories(website):
     '''
@@ -82,8 +82,10 @@ def enter_categories(website):
             pass
     return 
 
-# this code entered all the information from TIVONEAT and Markiv Sodi website to our database
+# this code entered all the information from TIVONEAT, Markiv Sodi and TheVeganati websites to our database
 Tivoneat = Tivoneat.Tivoneat()
 MarkivSodi = MarkivSodi.MarkivSodi()
+TheVeganati = TheVeganati.TheVeganati()
 enter_categories(Tivoneat)   
-enter_categories(MarkivSodi)     
+enter_categories(MarkivSodi) 
+enter_categories(TheVeganati)    
