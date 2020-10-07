@@ -86,7 +86,7 @@ class Search:
         
         '''
         the search algorithm - first the user will choose the kind of recipe he's looking for
-        than he will input the restrictions
+        than he will input the restrictions and preferences
         '''
         
         no_gluten = self._gluten()   
@@ -100,12 +100,15 @@ class Search:
         restrictions = input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n")
         restrictions_list = restrictions.split()
         
+        preferences = input("אילו מצרכים תרצה שיכללו במתכון? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n")
+        preferences_list = preferences.split()
+        
         # all of the urls in the choosen category - for gluten option check
         urls = []
         
         for name, url, ingr in records:
             urls.append(url)
-            if not any(x in ingr for x in restrictions_list):
+            if not any(x in ingr for x in restrictions_list) and all(x in ingr for x in preferences_list):
                 recipes[name] = url
 
         # if gluten is entered as restriction, algorithm will add the relevant recipes from the gluten cloumn in our table
@@ -113,7 +116,7 @@ class Search:
             restrictions_list.remove('גלוטן')
             for name, url, ingr in no_gluten:
                 if url in urls:
-                    if not any(x in ingr for x in restrictions_list):
+                    if not any(x in ingr for x in restrictions_list) and all(x in ingr for x in preferences_list):
                         recipes[name] = url
         
         return recipes   
