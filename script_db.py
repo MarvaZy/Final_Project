@@ -50,6 +50,7 @@ mycursor.execute("CREATE TABLE Gluten (id INT AUTO_INCREMENT PRIMARY KEY, Name V
 import MarkivSodi
 import Tivoneat
 import TheVeganati
+import Veg
 
 def enter_categories(website):
     '''
@@ -86,6 +87,8 @@ def enter_categories(website):
 Tivoneat = Tivoneat.Tivoneat()
 MarkivSodi = MarkivSodi.MarkivSodi()
 TheVeganati = TheVeganati.TheVeganati()
+Veg = Veg.Veg()
 enter_categories(Tivoneat)   
 enter_categories(MarkivSodi) 
-enter_categories(TheVeganati)    
+enter_categories(TheVeganati)
+enter_categories(Veg)    
