@@ -7,9 +7,10 @@ Created on Thu Oct  8 15:20:13 2020
 '''
 For Veg Website Only
 '''
-
+from db import db
 import requests
 from bs4 import BeautifulSoup
+# in this website, we need to use selenium to click "load more" button
 from selenium import webdriver
 import time
 from webdriver_manager.chrome import ChromeDriverManager
@@ -23,11 +24,13 @@ with requests.Session() as se:
         "Accept-Language": "en"
     }
 
-class Veg:
+class Veg(db):
     
     def __init__(self):
-        # home page of TheVeganati websites
+        super(Veg, self).__init__()
+        # home page
         self.url = "https://veg.co.il/recipes/" 
+        # initializing a Chrome driver
         self.options = webdriver.ChromeOptions()
         self.options.add_argument('--ignore-certificate-errors')
         self.driver = webdriver.Chrome(ChromeDriverManager().install())                                  
@@ -115,7 +118,7 @@ class Veg:
             
         return recipes
     
-    def get_ingredients(self, category):
+    def _get_ingredients(self, category):
         
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
@@ -141,3 +144,7 @@ class Veg:
             recipes_ingr[recipe]["ingredients"] = str_ingredients
         
         return recipes_ingr
+
+# insert all the data to the SQL table
+veg = Veg()
+veg.insert()

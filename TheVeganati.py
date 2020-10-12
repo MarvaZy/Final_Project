@@ -9,7 +9,7 @@ Created on Wed Oct  7 14:04:33 2020
 For TheVeganati Website Only
 '''
 
-
+from db import db
 import requests
 from bs4 import BeautifulSoup
 
@@ -22,10 +22,11 @@ with requests.Session() as se:
         "Accept-Language": "en"
     }
 
-class TheVeganati:
+class TheVeganati(db):
     
     def __init__(self):
-        # home page of TheVeganati websites
+        super(TheVeganati, self).__init__()
+        # home page
         self.url = "https://theveganati.com/"                                   
  
     def _get_categories(self): 
@@ -118,7 +119,7 @@ class TheVeganati:
             
         return recipes
     
-    def get_ingredients(self, category):
+    def _get_ingredients(self, category):
         
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
@@ -148,3 +149,7 @@ class TheVeganati:
             recipes_ingr[recipe]["ingredients"] = str_ingredients
         
         return recipes_ingr
+
+# insert all the data to the SQL table
+the_veganati = TheVeganati()
+the_veganati.insert()

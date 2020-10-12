@@ -1,3 +1,4 @@
+from db import db
 import requests
 from bs4 import BeautifulSoup
 
@@ -11,10 +12,11 @@ with requests.Session() as se:
     }
 
 
-class MarkivSodi:
+class MarkivSodi(db):
     
     def __init__(self):
-        # home page of one of the recipes' websites
+        super(MarkivSodi, self).__init__()
+        # home page
         self.url = "https://www.markivsodi.co.il/"                             
 
     def _get_categories(self): 
@@ -116,7 +118,7 @@ class MarkivSodi:
             
         return recipes
         
-    def get_ingredients(self, category):
+    def _get_ingredients(self, category):
         
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
@@ -151,3 +153,8 @@ class MarkivSodi:
             recipes_ingr[recipe]["ingredients"] = str_ingredients
     
         return recipes_ingr
+    
+# insert all the data to the SQL table
+markiv_sodi = MarkivSodi()
+markiv_sodi.insert()
+        

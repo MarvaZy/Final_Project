@@ -6,95 +6,25 @@ Created on Mon Sep 21 22:24:17 2020
 """
 
 # first we need to import our database in mySQL
+from db import db
 
-import mysql.connector as mysql
-
-db = mysql.connect(
-    host = "localhost",
-    user = "root",
-    passwd = "123456789",
-    database = "final_project"
-)
-
-cursor = db.cursor()
-
-class Search:
+class Search(db):
     
     def __init__(self):
-        pass
-
-    def _category_from_index(self, index):
-        
-        """
-        category_from_index translate the number that the user will choose as its category, to the related table
-        """
-        
-        if index == 1:
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Breakfast"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 2:
-            sql_select_query = """SELECT Name, URL, Ingredients FROM MainCourse"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 3:
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Dessert"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 4: 
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Salad"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 5: 
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Snack"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 6:
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Shake"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        elif index == 7:
-            sql_select_query = """SELECT Name, URL, Ingredients FROM Spread"""
-            cursor.execute(sql_select_query)
-            records = cursor.fetchall()
-            
-        # this will not happen - this function is acctivated only if the input is between 1 to 7
-        else:
-            records = "Error"
-         
-        return records
-    
-    def _gluten(self):
-        
-        '''
-        gluten function gives all the records related to no-gluten recipies 
-        '''
-        
-        sql_select_query = """SELECT Name, URL, Ingredients FROM Gluten"""
-        cursor.execute(sql_select_query)
-        no_gluten = cursor.fetchall()
-    
-        return no_gluten
-   
+        super(Search, self).__init__()
+ 
     def search(self):
         
         '''
         the search algorithm - first the user will choose the kind of recipe he's looking for
         than he will input the restrictions and preferences
         '''
-        
-        no_gluten = self._gluten()   
+          
         recipes = {}
         usr_input = int(input("מהו סוג המתכון המבוקש? (הקש את המספר)\n1. ארוחות בוקר\n2. עיקריות \n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
         while usr_input not in range(1,8):
             usr_input = int(input("בחירה לא חוקית; אנא בחר שנית:\n1. ארוחות בוקר\n2. עיקריות\n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
-        records = self._category_from_index(usr_input)
+        records = self.select(usr_input)
         
         
         restrictions = input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n")
@@ -112,7 +42,9 @@ class Search:
                 recipes[name] = url
 
         # if gluten is entered as restriction, algorithm will add the relevant recipes from the gluten cloumn in our table
-        if 'גלוטן' in restrictions_list:    
+        if 'גלוטן' in restrictions_list:
+            # no gluten recipes -> index = 8
+            no_gluten = self.select(8) 
             restrictions_list.remove('גלוטן')
             for name, url, ingr in no_gluten:
                 if url in urls:
