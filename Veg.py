@@ -35,67 +35,54 @@ class Veg(db):
         self.options.add_argument('--ignore-certificate-errors')
         self.driver = webdriver.Chrome(ChromeDriverManager().install())                                  
  
-    def _get_categories(self): 
-        
+    def _get_categories(self):
         '''
         get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
         '''
-        
         # getting the webpage
         page = se.get(self.url)
         soup = BeautifulSoup(page.content, 'html.parser')                          
-        
         category_recipes = {}
-        all_categories = []
+        all_categories = [] 
         
         # getting the part with the recipes links
-        sub_menu = soup.find('ul', class_="subcategories-as-images")                                    
-         
+        sub_menu = soup.find('ul', class_="subcategories-as-images")                                     
         # getting the categories names and links
         for a in sub_menu.find_all('a', href=True):                                
-            all_categories.append([[a.get_text()], self.url.split("/recipes/")[0]+a['href']])
+            all_categories.append([[a.get_text()], self.url.split("/recipes/")[0]+a['href']])      
         
         # getting the part with the gluten-free recipes link
         sub_menu = soup.find('nav', class_="footer-extra-menu")                                             
         for a in sub_menu.find_all('a', href=True):
             if "גלוטן" in a.get_text():
-                all_categories.append([[a.get_text()], a['href']])
+                all_categories.append([[a.get_text()], a['href']])  
         
-        category_recipes['ארוחות בוקר'] = [all_categories[0][1]]
-        
-        category_recipes['סלטים'] = [all_categories[1][1]]
-        
+        # Consolidates categories from the site into predefined categories
+        category_recipes['ארוחות בוקר'] = [all_categories[0][1]]      
+        category_recipes['סלטים'] = [all_categories[1][1]]     
         url_list = []
         for i in [2,3,4,6,9,10,11,12,13,17]:
             url_list.append(all_categories[i][1])
-        category_recipes['עיקריות'] = url_list
-        
+        category_recipes['עיקריות'] = url_list  
         url_list = []
         for i in [5,14,15]:
             url_list.append(all_categories[i][1])
-        category_recipes['קינוחים ומתוקים'] = url_list
-        
+        category_recipes['קינוחים ומתוקים'] = url_list   
         category_recipes['גבינות וממרחים'] = [all_categories[7][1]]
-        
         category_recipes['נשנושים וחטיפים'] = [all_categories[8][1]]
-        
         category_recipes['שייקים ומשקאות'] = all_categories[16][1]
-        
         category_recipes['נטול גלוטן'] = [all_categories[18][1]]
             
         return category_recipes
     
     def _get_recipes(self, category):
-        
         '''
         get_recipes gives a nested dictionary connecting the recipes names to their urls for a specific category
         the category is chosen by key values from the get_categories function
         '''
-        
         # loads the dictionary with the urls of the categories
         category_recipes = self._get_categories()                              
         recipes = {}
-        
         for url in category_recipes[category]:
             self.driver.get(url)
             # click load more button, if it exsits
@@ -108,6 +95,7 @@ class Veg(db):
                 pass
             soup = BeautifulSoup(self.driver.page_source, "lxml") 
             posts = soup.find(class_="archive-posts")
+            # getting recipes names and urls
             for post in posts.find_all('a', href=True):                           
                 recipes[post.find('h3').get_text()] = {"url": post['href']}
                
@@ -119,12 +107,10 @@ class Veg(db):
         return recipes
     
     def _get_ingredients(self, category):
-        
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
         the category is chosen by key values from the get_categories function
         '''
-
         recipes_ingr = self._get_recipes(category)
         for recipe in recipes_ingr:
             page = se.get(recipes_ingr[recipe]["url"])
