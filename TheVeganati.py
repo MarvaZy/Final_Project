@@ -30,21 +30,16 @@ class TheVeganati(db):
         self.url = "https://theveganati.com/"                                   
  
     def _get_categories(self): 
-        
         '''
         get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
         '''
-        
         # getting the webpage
         page = se.get(self.url)
         soup = BeautifulSoup(page.content, 'html.parser')                          
-        
         category_recipes = {}
         all_categories = []
-        
         # getting the part with the recipes links
         sub_menu = soup.find('ul', class_="sub-menu")                                    
-         
         # getting the categories names and links
         for a in sub_menu.find_all('a', href=True):                                
             all_categories.append([[a.get_text()], a['href']])
@@ -55,41 +50,34 @@ class TheVeganati(db):
             if "גלוטן" in a.get_text():
                 all_categories.append([[a.get_text()], a['href']])
         
+        # Consolidates categories from the site into predefined categories
         category_recipes['ארוחות בוקר'] = [all_categories[0][1]]
-        
         url_list = []
         for i in [1,2,3]:
             url_list.append(all_categories[i][1])
         category_recipes['עיקריות'] = url_list
-        
         category_recipes['קינוחים ומתוקים'] = all_categories[4][1]
-        
         url_list = []
         for i in [6,7]:
             url_list.append(all_categories[i][1])
         category_recipes['נשנושים וחטיפים'] = url_list
-        
         category_recipes['סלטים'] = [all_categories[8][1]]
-        
         category_recipes['נטול גלוטן'] = [all_categories[10][1]]
             
         return category_recipes
     
     def _get_recipes(self, category):
-        
         '''
         get_recipes gives a nested dictionary connecting the recipes names to their urls for a specific category
         the category is chosen by key values from the get_categories function
         '''
-        
         # loads the dictionary with the urls of the categories
         category_recipes = self._get_categories()                              
         recipes = {}
-        
         for url in category_recipes[category]:
             page = se.get(url)
             soup = BeautifulSoup(page.content, 'html.parser') 
-        
+            
             # finds number of pages in the category, so we can load them 
             web_numbers = soup.find_all('a', class_="page-numbers")                         
             page_numbers = []
@@ -100,7 +88,7 @@ class TheVeganati(db):
                 page_numbers = int(page_numbers[-1])
             else:
                 page_numbers = 1
-               
+                
             # getting the recipes links and names
             for i in range(1,page_numbers+1):
                 new_url = url+"page/"+str(i)+"/"
@@ -108,9 +96,8 @@ class TheVeganati(db):
                 soup1 = BeautifulSoup(page1.content, 'html.parser')
                 main_page = soup1.find(class_="posts-wrap")
                 headers = main_page.find_all('h3', class_="entry-title")
-                for i in range(len(headers)):
-                    for a in headers[i].find_all('a', href=True):
-                        recipes[a.get_text()] = {"url": a['href']}
+                for header in headers:
+                    recipes[header.get_text()] = {"url": header.find('a', href=True)['href']}
                       
         # deleting links to pages of collections of recipes
         for recipe in recipes.copy():
@@ -120,7 +107,6 @@ class TheVeganati(db):
         return recipes
     
     def _get_ingredients(self, category):
-        
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
         the category is chosen by key values from the get_categories function
@@ -135,7 +121,6 @@ class TheVeganati(db):
             for i in range(len(pre)):
                 if "רכיבים" in pre[i].get_text():
                     relevent_part = pre[i]
-            
             # getting only the text into a list
             ingredients = relevent_part.get_text().split() 
             # irrelevant words that can be excluded
