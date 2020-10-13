@@ -19,64 +19,47 @@ class MarkivSodi(db):
         # home page
         self.url = "https://www.markivsodi.co.il/"                             
 
-    def _get_categories(self): 
-        
+    def _get_categories(self):  
         '''
         get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
         '''
-        
         # getting the webpage
         page = se.get(self.url)
         soup = BeautifulSoup(page.content, 'html.parser')                          
-        
         category_recipes = {}
         all_categories = []
- 
         # getting the part with the recipes links
         sub_menu = soup.find(class_="sub-menu")                                    
-    
         # getting the categories names and links
         for a in sub_menu.find_all('a', href=True):                                
             all_categories.append([[a.get_text()], a['href']]) 
-         
+        
+        # Consolidates categories from the site into predefined categories 
         url_list = []
         for i in [1,8,9,10]:
             url_list.append(all_categories[i][1])
         category_recipes['קינוחים ומתוקים'] = url_list
-        
         category_recipes['נשנושים וחטיפים'] = [all_categories[7][1]]
-        
         url_list = []
         for i in [13, 14, 16]:
             url_list.append(all_categories[i][1])
-        category_recipes['עיקריות'] = url_list
-            
+        category_recipes['עיקריות'] = url_list 
         category_recipes['סלטים'] = [all_categories[15][1]]
-        
         category_recipes['גבינות וממרחים'] = [all_categories[7][1]]
-        
         category_recipes['נטול גלוטן'] = [all_categories[21][1]]
         
         return category_recipes
     
         
     def _get_recipes(self, category):
-        
         '''
         get_recipes gives a nested dictionary connecting the recipes names to their urls for a specific category
         the category is chosen by key values from the get_categories function
         '''
-        
         # loads the dictionary with the urls of the categories
         category_recipes = self._get_categories()                              
         recipes = {}
-        
-        for url in category_recipes[category]:
-            # list of all the urls for the recipes in that category
-            recipes_links = []
-            # list of all the names for the recipes in that category
-            recipes_names = []
-            
+        for url in category_recipes[category]:         
             page = se.get(url)
             soup = BeautifulSoup(page.content, 'html.parser') 
         
@@ -97,19 +80,9 @@ class MarkivSodi(db):
                 page1 = se.get(new_url)
                 soup1 = BeautifulSoup(page1.content, 'html.parser')
                 main_page = soup1.find(class_="archive-blog")
-                for a in main_page.find_all('a', href=True):
-                    if self.url in a['href'] and "comments" not in a['href'] and "respond" not in a['href']:
-                        recipes_links.append(a['href'].strip())      
-                # deletes duplicates of links
-                recipes_links = list(dict.fromkeys(recipes_links))
-                # the name of the recipe
-                headers = main_page.find_all('h3') 
-                for h in headers:
-                    recipes_names.append(h.get_text())
-                    
-            # join the name of the recipe to its link
-            for i in range(len(recipes_links)):
-                recipes[recipes_names[i]] = {"url": recipes_links[i]}
+                headers = main_page.find_all('h3')
+                for header in headers:
+                    recipes[header.get_text()] = {"url": header.find('a', href=True)['href']}
         
         # deleting links to pages of collections of recipes
         for recipe in recipes.copy():
@@ -118,18 +91,15 @@ class MarkivSodi(db):
             
         return recipes
         
-    def _get_ingredients(self, category):
-        
+    def _get_ingredients(self, category):  
         '''
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
         the category is chosen by key values from the get_categories function
-        '''
-        
+        ''' 
         recipes_ingr = self._get_recipes(category)
         for recipe in recipes_ingr:
             page = se.get(recipes_ingr[recipe]["url"])
             soup = BeautifulSoup(page.content, 'html.parser') 
-            
             # the class that contains the ingredients
             relevent_part = soup.find(class_="entry-content").get_text()                 
             try:
@@ -140,7 +110,6 @@ class MarkivSodi(db):
                 # if relevant part doesnt contain "לנו?" or "מרכיבים:" there is something wrong with the url
                 except IndexError:
                     print("Error, check "+recipe+" url: "+recipes_ingr[recipe])
-
             # getting only the text into a list
             ingredients = relevent_part.split()                                    
             exclude_words = ['מרכיבים','+','מה','צריך','חתיכות','גרם','קשה','כפית','כפות','על','פי','טעם','ציפוי','ראשון','שני','כוס','כמה','טיגון'] # irrelevant words that can be excluded
