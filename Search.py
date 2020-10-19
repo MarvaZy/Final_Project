@@ -42,12 +42,18 @@ class Search(db):
                 if url in urls:
                     if not any(x in ingr for x in restrictions) and all(x in ingr for x in preferences):
                         recipes[name] = url
-       # prints with empty line, separating the user input to the output, and from one recipe to the other 
-        print("")
-        for recipe in recipes:
-            print(recipe)
-            print(recipes[recipe])
-            print("")   
+       # if no results were found, user will be able to start a new search
+        if recipes:
+            # prints with empty line, separating the user input to the output, and from one recipe to the other
+            print("")
+            for recipe in recipes:
+                print(recipe)
+                print(recipes[recipe])
+                print("")
+        else:
+            another_search = int(input("לא נמצאו מתכונים מתאימים. להרצת חיפוש חדש, הקש 1 ולחץ אנטר\n"))
+            if another_search == 1:
+                return self.search()   
 
 search = Search()
 search.search()
