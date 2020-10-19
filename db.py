@@ -54,7 +54,7 @@ class db:
         select translate the number that the user will choose as its category, to the related table
         """
         sql_select_list = ["SELECT Name, URL, Ingredients FROM ", "category"]
-        if index in range(1,9):
+        if index in range(1,len(self.category_dictionary)+1):
             sql_select_list[1] = self.category_dictionary[index]["English"]
             sql_select_query = ''.join(sql_select_list)
             self.mycursor.execute(sql_select_query)
