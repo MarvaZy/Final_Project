@@ -42,8 +42,12 @@ class Search(db):
                 if url in urls:
                     if not any(x in ingr for x in restrictions) and all(x in ingr for x in preferences):
                         recipes[name] = url
-        
-        return recipes   
+       # prints with empty line, separating the user input to the output, and from one recipe to the other 
+        print("")
+        for recipe in recipes:
+            print(recipe)
+            print(recipes[recipe])
+            print("")   
 
 search = Search()
-print(search.search())
+search.search()
