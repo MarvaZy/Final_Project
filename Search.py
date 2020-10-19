@@ -51,8 +51,28 @@ class Search(db):
                 print(recipes[recipe])
                 print("")
         else:
-            another_search = int(input("לא נמצאו מתכונים מתאימים. להרצת חיפוש חדש, הקש 1 ולחץ אנטר\n"))
-            if another_search == 1:
+            # checks for typing errors of user's input
+            pref_and_rest = preferences + restrictions
+            i=1
+            while i<=1:
+                records = self.select(i)
+                ingr = [i.split() for i in list(list(zip(*records)))[2]]
+                ingr_flat = [item for sublist in ingr for item in sublist]
+                for word in pref_and_rest: 
+                    if word in ingr_flat:
+                        print(word)
+                        pref_and_rest.remove(word)
+                    if len(pref_and_rest) == 0:
+                        break
+                i += 1
+            # if a word is not found anywhere in the ingredients database, it may be a typing error
+            if len(pref_and_rest):
+                print("ייתכן והייתה שגיאה בקלט שהוזן. המילים הבאות לא נמצאו במאגרינו: ", end="")
+                print(*pref_and_rest)
+                another_search = input("להרצת חיפוש חדש, הקש 1 ולחץ אנטר\n")
+            else:
+                another_search = input("לא נמצאו מתכונים מתאימים. להרצת חיפוש חדש, הקש 1 ולחץ אנטר\n")
+            if another_search == "1":
                 return self.search()   
 
 search = Search()
