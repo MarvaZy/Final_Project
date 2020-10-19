@@ -13,7 +13,7 @@ class Search(db):
     def __init__(self):
         super(Search, self).__init__()
  
-    def type_error(self, list_of_words):
+    def _type_error(self, list_of_words):
         '''
         checks for typing errors of user's input
         output - list of words 
@@ -55,8 +55,8 @@ class Search(db):
             usr_input = int(input("בחירה לא חוקית; אנא בחר שנית:\n1. ארוחות בוקר\n2. עיקריות\n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
         records = self.select(usr_input)
         # checks for possible type errors in user input
-        restrictions = self.type_error(input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
-        preferences = self.type_error(input("אילו מצרכים תרצה שיכללו במתכון? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
+        restrictions = self._type_error(input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
+        preferences = self._type_error(input("אילו מצרכים תרצה שיכללו במתכון? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
         # all of the urls in the choosen category - for gluten option check
         urls = []
         # choosing recipe by input
