@@ -9,41 +9,22 @@ Created on Tue Sep 15 20:22:12 2020
 For Tivoneat Website Only
 '''
 
-from db import db
-import requests
-from bs4 import BeautifulSoup
+from BaseCrawler import BaseCrawler
 
-class Tivoneat(db):
+class Tivoneat():
     
     def __init__(self):
-        super(Tivoneat, self).__init__()
         # home page
-        self.url = "https://tivoneat.co.il/"                                   
+        self.url = "https://tivoneat.co.il/" 
+        self.website = BaseCrawler(self.url)                                       
  
     def _get_categories(self): 
         '''
         get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
         '''
-        # begining of url for loading next page
-        _start = "https://tivoneat.co.il/wp-content/themes/tivoneat/recLoad.php?paged=1&postsPerPage=6&category="   
-        # getting the webpage
-        page = requests.get(self.url)
-        soup = BeautifulSoup(page.content, 'html.parser')                          
-        category_recipes = {}
-        # getting the part with the recipes links
-        sub_menu = soup.find(class_="sub-menu")                                    
-        # getting the categories names and links
-        for a in sub_menu.find_all('a', href=True):                                
-            # weblink to a specific category
-            page1 = requests.get(a['href'])                                        
-            soup1 = BeautifulSoup(page1.content, 'html.parser')
-            # this part contains the category's number
-            body_id = str(soup1.find('body')).split(">")[0]                        
-            # extracting only the number itself
-            number_of_category = str(''.join(filter(str.isdigit, body_id)))
-            # changing the url so we can load the whole recipes
-            new_url = _start+number_of_category+"&lm=false"
-            category_recipes[a.get_text()] = str(new_url)
+        category_class = "sub-menu"
+        gluten_class = None
+        category_recipes = self.website._get_categories(category_class, gluten_class)
             
         return category_recipes
     
@@ -53,26 +34,11 @@ class Tivoneat(db):
         the category is chosen by key values from the get_categories function
         '''
         # loads the dictionary with the urls of the categories
-        category_recipes = self._get_categories()                           
-        recipes = {}
-        # split the url so we can change pages
-        url_load = category_recipes[category].split('&')                           
-        j = 1
-        is_last = "False"
-        while is_last == "False":
-            # next page
-            url_load[0] = ''.join(url_load[0].split('=')[0]) + "=" + str(j)                                       
-            new_url = '&'.join(url_load)
-            page = requests.get(new_url)
-            soup = BeautifulSoup(page.content, 'html.parser') 
-            # getting recipes names and urls
-            for post in soup.find_all('a', href=True):
-                recipes[post.find('h2').get_text()] = {"url": post['href']} 
-            # preparing for next page
-            url_load = new_url.split('&') 
-            j += 1
-            # checks if we got the last page of the category, based on a script in the webpage itself
-            is_last = str(soup.find('script').get_text().split()[2][:-1]).capitalize()
+        category_recipes = self._get_categories()  
+        posts_class = "postsList"
+        header_type = "h2"
+        button_class = "moreRecipesBtn"
+        recipes = self.website._get_recipes(category_recipes, category, posts_class, header_type, button_class)
         
         return recipes
     
@@ -81,26 +47,10 @@ class Tivoneat(db):
         get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
         the category is chosen by key values from the get_categories function
         '''
-        recipes_ingr = self._get_recipes(category)
-        for recipe in recipes_ingr:
-            page = requests.get(recipes_ingr[recipe]["url"])
-            soup = BeautifulSoup(page.content, 'html.parser') 
-            # the class that contains the ingredients
-            relevent_part = soup.find(class_="recipeIng") 
-            # getting only the text into a list
-            ingredients = relevent_part.get_text().split() 
-            # irrelevant words that can be excluded
-            exclude_words = ['+','מה','צריך','חתיכות','גרם','קשה','כפית','כפות','על','פי','טעם','ציפוי','ראשון','שני','כוס','כמה','טיגון'] 
-            # no digits or irrelevant symbols
-            final_ingredients = [x for x in ingredients if not (x.isdigit() 
-                                                                or x=='/' 
-                                                                or x 
-                                                                in exclude_words)] 
-            str_ingredients = ' '.join(final_ingredients)
-            recipes_ingr[recipe]["ingredients"] = str_ingredients
+        recipes = self._get_recipes(category)
+        ingredients_class = "recipeIng"
+        table = None
+        recipes_ingr = self.website._get_ingredients(recipes, ingredients_class, table)
         
         return recipes_ingr
 
-# insert all the data to the SQL table
-tivoneat = Tivoneat()
-tivoneat.insert()

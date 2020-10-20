@@ -1,0 +1,191 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 20 13:06:55 2020
+
+@author: MarvaZychlinski
+"""
+
+from bs4 import BeautifulSoup
+# in this website, we need to use selenium to click "load more" button
+from selenium import webdriver
+import time
+from webdriver_manager.chrome import ChromeDriverManager
+import requests
+# this is to avoid getting blocked by the website
+with requests.Session() as se:
+    se.headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en"
+    }
+
+class BaseCrawler():
+    '''
+    
+    '''
+    
+    def __init__(self, url):
+        # home page
+        self.url = url
+        self.category_dictionary = {1: {"English": "Breakfast", "Hebrew": "ארוחות בוקר"}, 
+                                    2: {"English": "MainCourse", "Hebrew": "עיקריות"}, 
+                                    3: {"English": "Dessert", "Hebrew": "קינוחים ומתוקים"},
+                                    4: {"English": "Salad", "Hebrew": "סלטים"},
+                                    5: {"English": "Snack", "Hebrew": "נשנושים וחטיפים"},
+                                    6: {"English": "Shake", "Hebrew": "שייקים ומשקאות"},
+                                    7: {"English": "Spread", "Hebrew": "גבינות וממרחים"},
+                                    8: {"English": "Gluten", "Hebrew": "נטול גלוטן"}                    
+                                    }
+ 
+    def _get_categories(self, category_class, gluten_class = None):
+        '''
+        get_categories gives a dictionary, connecting between the name of each category (key) to its link (value)
+        '''
+        # getting the webpage
+        page = se.get(self.url)
+        soup = BeautifulSoup(page.content, 'html.parser')                          
+        category_recipes = {self.category_dictionary[i]["Hebrew"]: [] for i in self.category_dictionary.keys()}
+        gluten = False
+        
+        # getting the part with the recipes links
+        sub_menu = soup.find('ul', class_=category_class)                                     
+        # getting the categories names and links
+        for a in sub_menu.find_all('a', href=True):
+            # Consolidates categories from the site into predefined categories
+            if any(word in a.get_text() for word in ["בוקר"]):    
+                category_recipes['ארוחות בוקר'].append(a['href'])
+            elif any(word in a.get_text() for word in ["עיקרי", "צהריים", "ערב", "משפחתית", "מרקים", "פסטות", "חגים", "תבשילים", "קציצות", "ממולאים", "פשטידות", "מוקפצים", "ירקות"]):
+                category_recipes['עיקריות'].append(a['href'])
+            elif any(word in a.get_text() for word in ["קינוח", "עוגות"]):
+                category_recipes['קינוחים ומתוקים'].append(a['href'])
+            elif any(word in a.get_text() for word in ["סלטים"]):
+                category_recipes['סלטים'].append(a['href'])
+            elif any(word in a.get_text() for word in ["נשנוש", "חטי", "עוגיות"]):
+                category_recipes['נשנושים וחטיפים'].append(a['href'])
+            elif any(word in a.get_text() for word in ["שייק", "משקאות"]):
+                category_recipes['שייקים ומשקאות'].append(a['href'])
+            elif any(word in a.get_text() for word in ["גבינ", "ממרח", "מטבל"]):
+                category_recipes['גבינות וממרחים'].append(a['href'])
+            elif any(word in a.get_text() for word in ["גלוטן"]):
+                gluten = True
+                category_recipes['נטול גלוטן'].append(a['href'])
+        
+        # getting the part with the gluten-free recipes link
+        if not gluten:
+            sub_menu = soup.find(class_=gluten_class)                                             
+            for a in sub_menu.find_all('a', href=True):
+                if "גלוטן" in a.get_text():
+                    category_recipes['נטול גלוטן'].append(a['href'])
+
+        return category_recipes
+    
+    def _get_recipes(self, category_recipes, category, posts_class, header_type, button_class = None):
+        '''
+        get_recipes gives a nested dictionary connecting the recipes names to their urls for a specific category
+        the category is chosen by key values from the get_categories function
+        TWO POSSIBLE _get_recipes - depends on the method of scrapping; clicking a "load more" button or loading next url for more recipes
+        THIS ONE - with "load more" button
+        '''                             
+        recipes = {}
+        if button_class:
+            # initializing a Chrome driver
+            options = webdriver.ChromeOptions()
+            options.add_argument('--ignore-certificate-errors')
+            driver = webdriver.Chrome(ChromeDriverManager().install())
+            for url in category_recipes[category]:
+                # only for Veg website
+                if "http" not in url:
+                    url = self.url.split("/recipes/")[0] + url
+                driver.get(url)
+                # click load more button, if it exsits
+                try:
+                    load_more = driver.find_element_by_class_name(button_class)
+                    while load_more.is_displayed():
+                          driver.execute_script("arguments[0].click();", load_more)
+                          time.sleep(4)
+                except:
+                    pass
+                soup = BeautifulSoup(driver.page_source, "lxml") 
+                posts = soup.find(class_=posts_class)
+                # getting recipes names and urls
+                for post in posts.find_all('a', href=True):
+                    # deleting links to pages of collections of recipes
+                    if "אוסף" not in post.get_text():                            
+                        recipes[post.find(header_type).get_text()] = {"url": post['href']}
+            
+        else:
+            for url in category_recipes[category]:         
+                page = se.get(url)
+                soup = BeautifulSoup(page.content, 'html.parser') 
+            
+                # finds number of pages in the category, so we can load them 
+                web_numbers = soup.find_all(class_="page-numbers")                         
+                page_numbers = []
+                for a in web_numbers:
+                    if a.get_text().isdigit():
+                        page_numbers.append(a.get_text())  
+                if len(page_numbers) > 0:
+                    page_numbers = int(page_numbers[-1])
+                else:
+                    page_numbers = 1
+                   
+                # getting the recipes links and names
+                for i in range(1,page_numbers+1):
+                    new_url = url+"page/"+str(i)+"/"
+                    page1 = se.get(new_url, verify=False)
+                    soup1 = BeautifulSoup(page1.content, 'html.parser')
+                    main_page = soup1.find(class_=posts_class)
+                    headers = main_page.find_all(header_type)
+                    for header in headers:
+                        # deleting links to pages of collections of recipes
+                        if "אוסף" not in header.get_text():
+                            recipes[header.get_text()] = {"url": header.find('a', href=True)['href']}
+
+        return recipes
+    
+    
+    def _get_ingredients(self, recipes, ingredients_class, table = None):
+        '''
+        get_ingredients will give a nested dictionary for each recipe name, with its url and list of ingredientes
+        the category is chosen by key values from the get_categories function
+        '''
+        global relvent_part
+        recipes_ingr = recipes
+        for recipe in recipes_ingr:
+            page = se.get(recipes_ingr[recipe]["url"])
+            soup = BeautifulSoup(page.content, 'html.parser') 
+            
+            # the class that contains the ingredients - if table for ingredients exists or not, gets the relevent part
+            if table: 
+                pre = soup.find(class_=ingredients_class).find_all('pre')
+                for i in range(len(pre)):
+                    if "רכיבים" in pre[i].get_text():
+                        relevent_part = pre[i].get_text()
+            else:
+                relevent_part = soup.find(class_=ingredients_class).get_text()     
+            
+            try:
+                relevent_part = relevent_part.split("לנו?")[1].split("אופן הכנה:")[0]
+            except IndexError:
+                try:
+                    relevent_part = relevent_part.split("מרכיבים:")[1].split("אופן הכנה:")[0]
+                # if relevant part doesnt contain "לנו?" or "מרכיבים:" there is something wrong with the url
+                except:
+                    pass
+            except:
+                pass
+                    
+            # getting only the text into a list
+            ingredients = relevent_part.split() 
+            # irrelevant words that can be excluded
+            exclude_words = ['+','מה','צריך','חתיכות','גרם','קשה','כפית','כפות','על','פי','טעם','ציפוי','ראשון','שני','כוס','כמה', 'מרכיבים', 'טיגון'] 
+            # no digits or irrelevant symbols
+            final_ingredients = [x for x in ingredients if not (x.isdigit() 
+                                                                or x=='/' 
+                                                                or x 
+                                                                in exclude_words)] 
+            str_ingredients = ' '.join(final_ingredients)
+            recipes_ingr[recipe]["ingredients"] = str_ingredients
+        
+        return recipes_ingr
