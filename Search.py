@@ -4,6 +4,7 @@ Created on Mon Sep 21 22:24:17 2020
 
 @author: MarvaZychlinski
 """
+from BaseCrawler import BaseCrawler
 
 # first we need to import our database in mySQL
 from db import db
@@ -13,7 +14,7 @@ class Search(db):
     def __init__(self):
         super(Search, self).__init__()
  
-    def _type_error(self, list_of_words):
+    def type_error(self, list_of_words):
         '''
         checks for typing errors of user's input
         output - list of words 
@@ -44,6 +45,19 @@ class Search(db):
                 
         return correct_words
     
+    def index_to_category(self, index):
+        """
+        index_to_category translate the number that the user will choose as its category, to the related table
+        """
+        if index-1 in range(len(BaseCrawler.category_dictionary)):
+            category = BaseCrawler.category_dictionary[index]["English"]
+        # this will not happen - this function is acctivated only if the input is between 1 to 8
+        else:
+            return "Error"
+        
+        return category
+
+    
     def search(self):
         '''
         the search algorithm - first the user will choose the kind of recipe he's looking for
@@ -53,10 +67,10 @@ class Search(db):
         usr_input = int(input("מהו סוג המתכון המבוקש? (הקש את המספר)\n1. ארוחות בוקר\n2. עיקריות \n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
         while usr_input not in range(1,8):
             usr_input = int(input("בחירה לא חוקית; אנא בחר שנית:\n1. ארוחות בוקר\n2. עיקריות\n3. קינוחים ומתוקים\n4. סלטים\n5. נשנושים וחטיפים\n6. שייקים ומשקאות\n7. גבינות וממרחים\n"))
-        records = self.select(usr_input)
+        records = self.select(self.index_to_category(usr_input))
         # checks for possible type errors in user input
-        restrictions = self._type_error(input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
-        preferences = self._type_error(input("אילו מצרכים תרצה שיכללו במתכון? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
+        restrictions = self.type_error(input("מהן המגבלות התזונתיות? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
+        preferences = self.type_error(input("אילו מצרכים תרצה שיכללו במתכון? (ניתן לבחור יותר מאחד, יש להקיש רווח בין בחירה לבחירה)\n").split())
         # all of the urls in the choosen category - for gluten option check
         urls = []
         # choosing recipe by input
@@ -67,8 +81,8 @@ class Search(db):
 
         # if gluten is entered as restriction, algorithm will add the relevant recipes from the gluten cloumn in our table
         if 'גלוטן' in restrictions:
-            # no gluten recipes -> index = 8
-            no_gluten = self.select(8) 
+            # no gluten recipes
+            no_gluten = self.select("Gluten") 
             restrictions.remove('גלוטן')
             for name, url, ingr in no_gluten:
                 if url in urls:
