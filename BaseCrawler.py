@@ -173,6 +173,16 @@ class BaseCrawler():
 
         return recipes
     
+    def remove_non_alphanumeric(self, list_of_strings):
+        '''
+        removes all non alphanumeric characters from a list of strings
+        '''
+        non_alpha = []
+        for word in list_of_strings:
+            alphanumeric_filter = filter(str.isalnum, word)
+            non_alpha.append("".join(alphanumeric_filter))
+        
+        return non_alpha
     
     def _get_ingredients(self, category):
         '''
@@ -209,22 +219,23 @@ class BaseCrawler():
             # irrelevant words that can be excluded
             exclude_words = ['+','מה','צריך','חתיכות','גרם','קשה','כפית','כפות','על','פי','טעם','ציפוי','ראשון','שני','כוס','כמה', 'מרכיבים', 'טיגון'] 
             # no digits or irrelevant symbols
-            final_ingredients = [x for x in ingredients if not (x.isdigit() 
+            final_ingredients = self.remove_non_alphanumeric([x for x in ingredients if not 
+                                                               (x.isdigit() 
                                                                 or x=='/' 
-                                                                or x 
-                                                                in exclude_words)] 
+                                                                or x in exclude_words)])
             str_ingredients = ' '.join(final_ingredients)
             recipes_ingr[recipe]["ingredients"] = str_ingredients
         
         return recipes_ingr
     
     def insert_ingredients(self):
+        DB = db()
         for index in BaseCrawler.category_dictionary.keys():
             eng_category = BaseCrawler.category_dictionary[index]["English"]
             heb_category = BaseCrawler.category_dictionary[index]["Hebrew"]
             ingr_dictionary = self._get_ingredients(heb_category)
-            db.bulk_insert(eng_category, ingr_dictionary)
+            DB.bulk_insert(eng_category, ingr_dictionary)
         
-        return
+        return 
             
             
