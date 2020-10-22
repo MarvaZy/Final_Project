@@ -14,4 +14,4 @@ class MarkivSodi(BaseCrawler):
       
 # loads all the data from the website to the DB
 MarkivSodi = MarkivSodi()
-MarkivSodi.insert_ingredients()
+MarkivSodi.fetch_recipes()

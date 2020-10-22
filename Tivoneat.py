@@ -25,5 +25,5 @@ class Tivoneat(BaseCrawler):
  
 # loads all the data from the website to the DB
 Tivoneat = Tivoneat()
-Tivoneat.insert_ingredients()
+Tivoneat.fetch_recipes()
 

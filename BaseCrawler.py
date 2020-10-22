@@ -6,11 +6,13 @@ Created on Tue Oct 20 13:06:55 2020
 """
 
 from bs4 import BeautifulSoup
-# in this website, we need to use selenium to click "load more" button
+
+# for some websites, we need to use selenium to click "load more" button
 from selenium import webdriver
 import time
 from webdriver_manager.chrome import ChromeDriverManager
 import requests
+
 # this is to avoid getting blocked by the website
 with requests.Session() as se:
     se.headers = {
@@ -36,15 +38,14 @@ class BaseCrawler():
                                     }
     
     def __init__(self):
-        # home page
-        self.url = None
-        self.category_class = None
-        self.gluten_class = None
-        self.posts_class = None
-        self.header_type = None
-        self.button_class = None
-        self.ingredients_class = None
-        self.table = None
+        self.url = None # home page
+        self.category_class = None # class of the category links at the main page of website
+        self.gluten_class = None # class of other links, containing gluten-free option link
+        self.posts_class = None # class of the recipes posts in each category
+        self.header_type = None # type of header of the recipe name (h2, h3 etc.)
+        self.button_class = None # if exicts, class for "load more" button
+        self.ingredients_class = None # class containing the ingredients of the recipe
+        self.table = None # in some websites, ingredients are located in a table in different class
  
     def _get_categories(self):
         '''
@@ -58,8 +59,10 @@ class BaseCrawler():
         
         # getting the part with the recipes links
         sub_menu = soup.find('ul', class_=self.category_class)                                     
+        
         # getting the categories names and links
         for a in sub_menu.find_all('a', href=True):
+            
             # Consolidates categories from the site into predefined categories
             if any(word in a.get_text() for word in ["בוקר"]):    
                 category_recipes['ארוחות בוקר'].append(a['href'])
@@ -96,27 +99,33 @@ class BaseCrawler():
         '''
         category_recipes = self._get_categories()
         recipes = {}
+        
         # initializing a Chrome driver
         options = webdriver.ChromeOptions()
         options.add_argument('--ignore-certificate-errors')
         driver = webdriver.Chrome(ChromeDriverManager().install())
+        
         for url in category_recipes[category]:
+            
             # only for Veg website
             if "http" not in url:
                 url = self.url.split("/recipes/")[0] + url
             driver.get(url)
+            
             # click load more button, if it exsits
             try:
                 load_more = driver.find_element_by_class_name(self.button_class)
                 while load_more.is_displayed():
                       driver.execute_script("arguments[0].click();", load_more)
-                      time.sleep(4)
+                      time.sleep(1)
             except:
                 pass
             soup = BeautifulSoup(driver.page_source, "lxml") 
             posts = soup.find(class_=self.posts_class)
+            
             # getting recipes names and urls
             for post in posts.find_all('a', href=True):
+                
                 # deleting links to pages of collections of recipes
                 if "אוסף" not in post.get_text():                            
                     recipes[post.find(self.header_type).get_text()] = {"url": post['href']}
@@ -154,6 +163,7 @@ class BaseCrawler():
                 main_page = soup1.find(class_=self.posts_class)
                 headers = main_page.find_all(self.header_type)
                 for header in headers:
+                    
                     # deleting links to pages of collections of recipes
                     if "אוסף" not in header.get_text():
                         recipes[header.get_text()] = {"url": header.find('a', href=True)['href']}
@@ -208,7 +218,6 @@ class BaseCrawler():
             except IndexError:
                 try:
                     relevent_part = relevent_part.split("מרכיבים:")[1].split("אופן הכנה:")[0]
-                # if relevant part doesnt contain "לנו?" or "מרכיבים:" there is something wrong with the url
                 except:
                     pass
             except:
@@ -216,8 +225,10 @@ class BaseCrawler():
                     
             # getting only the text into a list
             ingredients = relevent_part.split() 
+            
             # irrelevant words that can be excluded
             exclude_words = ['+','מה','צריך','חתיכות','גרם','קשה','כפית','כפות','על','פי','טעם','ציפוי','ראשון','שני','כוס','כמה', 'מרכיבים', 'טיגון'] 
+            
             # no digits or irrelevant symbols
             final_ingredients = self.remove_non_alphanumeric([x for x in ingredients if not 
                                                                (x.isdigit() 
@@ -228,7 +239,7 @@ class BaseCrawler():
         
         return recipes_ingr
     
-    def insert_ingredients(self):
+    def fetch_recipes(self):
         DB = db()
         for index in BaseCrawler.category_dictionary.keys():
             eng_category = BaseCrawler.category_dictionary[index]["English"]

@@ -25,4 +25,4 @@ class TheVeganati(BaseCrawler):
  
 # loads all the data from the website to the DB
 TheVeganati = TheVeganati()
-TheVeganati.insert_ingredients() 
+TheVeganati.fetch_recipes() 

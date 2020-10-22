@@ -23,4 +23,4 @@ class Veg(BaseCrawler):
  
 # loads all the data from the website to the DB
 Veg = Veg()
-Veg.insert_ingredients()  
+Veg.fetch_recipes()  
